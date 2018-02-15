@@ -19,6 +19,36 @@ usage(){
 	echo "	-v, --vhost		: créer un vhost nginx type avec support ssl et renouvellement certificat"
 }
 
+_Ask(){
+	#Récupère les réponses possibles et les convertis en un array associatif
+	IFS=';' read -ra Array <<< "$3"
+	declare -A Reponses
+	for key in "${!Array[@]}"; do Reponses[${Array[$key]}]="$key"; done
+
+	#Demande l'information et traite les réponses
+	while [[ true ]]; do
+		if [[ $5 != 1 ]]; then
+			read -p "$2" Result
+		else
+			read -p "$2" -n 1 Result
+		fi
+		if [[ $4 != 1 ]]; then
+			Result=${Result,,}
+		fi
+		if [[ -n "${Reponses[$Result]}" ]]; then
+			eval "$1='$Result'"
+			if [[ $5 = 1 ]]; then
+				echo ""
+			fi
+			break
+		else
+			echo ""
+			echo "Réponse incorrecte"
+			echo ""
+		fi
+	done
+}
+
 renew(){
 	#Affiche la date et l'heure d'exécution du script
 	echo "========================================="
