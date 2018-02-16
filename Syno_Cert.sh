@@ -1,24 +1,56 @@
 #!/bin/bash
+# ===============================================================================================================================
+# Nom ...........: Syno_Cert
+# DEscription ...: Créé des fichiers vhosts pour synology. Permet aussi de récupérer le chemin d'accès des certificats et de les
+#                  renouveller automatiquement.
+# Version .......: v1.0
+# Author ........: SCNet
+# ===============================================================================================================================
 
 #Codes Couleurs
 ROUGE='\033[0;31m'
 CYAN='\033[0;36m'
 BLANC='\033[0m'
 
-error(){
+# FONCTION ======================================================================================================================
+# Nom .............: _Error
+# Description .....: Affiche le message d'erreur de paramètres invalides
+# Syntaxe .........: _Error
+# Valeur de retour.: Aucune
+# ===============================================================================================================================
+_Error(){
 	echo "ERREUR : paramètres invalides !" >&2
 	echo "Utilisez l'option -help pour en savoir plus" >&2
 	exit 1
-}
+}	#==> _Error
 
-usage(){
-	echo "Usage: ./${0##*/} [options]"
+# FONCTION ======================================================================================================================
+# Nom .............: _Help
+# Description .....: Affiche l'aide sur les commandes
+# Syntaxe .........: _Help
+# Valeur de retour.: Aucune
+# ===============================================================================================================================
+_Help(){
+	echo "Usage : ./${0##*/} [options]"
 	echo "	-h, --help		: afficher l'aide"
 	echo "	-r, --renew		: renouvelez les certificats"
 	echo "	-g, --get=<domaine>	: rétourne l'emplacement des fichiers du certificat <domaine>"
 	echo "	-v, --vhost		: créer un vhost nginx type avec support ssl et renouvellement certificat"
-}
+} #==> _Help
 
+# FONCTION ======================================================================================================================
+# Nom .............: _Ask
+# Description .....: Demande une information à l'utilisateur
+# Syntaxe .........: _Ask $Reponse_Var $Demande $Reponses [$Casse] [$Impultionnel]
+# Paramètres ......: $Reponse_Var					- Nom de la variable dans laquelle retourner la réponse.
+#										 $Demande             - Question à afficher.
+#                    $Reponses            - Différentes réponses possibles séparés par ";". Mettre ".*" pour autoriser toutes les réponses.
+#										 $Casse								- [optionel] 1 = Respecter la casse, 0 = Ne pas tenir compte de la casse (par défaut).
+#                    $Impultionnel        - [optionel] 1 = Pas de validation par touche entrée, 0 = Validation par touche entrée (par défaut).
+#																						Possible uniquement si réponse de 1 caractère.
+# Valeur de retour.: Réponse de l'utilisateur
+# Exemple .........: _Ask Resultat "Etes-vous sûr ? [o/n]" "o|n" 0 1
+# ===============================================================================================================================
 _Ask(){
 	#Récupère les réponses possibles et les convertis en un array associatif
 	IFS=';' read -ra Array <<< "$3"
@@ -47,8 +79,14 @@ _Ask(){
 			echo ""
 		fi
 	done
-}
+}	#==> _Ask
 
+# FONCTION ======================================================================================================================
+# Nom .............: _Renew
+# Description .....: Lance le renouvellement des certificats.
+# Syntaxe .........: _Renew
+# Valeur de retour.: Aucune
+# ===============================================================================================================================
 renew(){
 	#Affiche la date et l'heure d'exécution du script
 	echo "========================================="
@@ -70,9 +108,17 @@ renew(){
 	/usr/syno/sbin/syno-letsencrypt renew-all -v
 
 	exit 0
-}
+}	#==> _Renew
 
-getpath(){
+# FONCTION ======================================================================================================================
+# Nom .............: _GetPath
+# Description .....: Retourne le chemin d'accès des fichiers du certificat
+# Syntaxe .........: _GetPath $Domaine
+# Paramètres ......: $Domaine							- Nom du domaine pour lequel récupérer les chemins des fichiers du certificat.
+# Valeur de retour.: Aucune
+# Exemple .........: _GetPath "mondomaine.fr"
+# ===============================================================================================================================
+_Getpath(){
 	#Recherche le nom du dossier du certificat
 	cert=`echo "$1" | sed "s/'//g"`
 
@@ -99,9 +145,15 @@ getpath(){
 
 	echo "Aucun certificat pour le domaine $1"
 	exit 1
-}
+}	#==> _Renew
 
-vhost(){
+# FONCTION ======================================================================================================================
+# Nom .............: _Vhost
+# Description .....: Créer un fichier vhost suivant les besoins de l'utilisateur
+# Syntaxe .........: _Vhost
+# Valeur de retour.: Aucune
+# ===============================================================================================================================
+_Vhost(){
 	#Récupère les informations nécessaire pour le vhost
 	echo ""
 	echo -e "${CYAN}Création d'un vhost type${BLANC}"
@@ -554,10 +606,13 @@ vhost(){
 	echo "	- \"nginx -s reload\" si le test est ok."
 	echo "	- \"rm /etc/nginx/sites-enabled/$Domain\" si le test a échoué."
 	echo ""
-}
+}	#==> _Vhost
+
+# PROGRAMME PRINCIPAL ===========================================================================================================
+# ===============================================================================================================================
 
 # Pas de paramètre
-[[ $# -lt 1 ]] && error
+[[ $# -lt 1 ]] && _Error
 
 # -o : options courtes
 # -l : options longues
@@ -567,18 +622,23 @@ options=$(getopt -o h,r,g:,v -l help,renew,get:,vhost -- "$@")
 set -- $options
 while true; do
 	case "$1" in
-		-g|--get) getpath "$2"
+		-g|--get)
+			_Getpath "$2"
 			shift 2;;
-		-r|--renew) renew
+		-r|--renew)
+			_Renew
 			shift;;
-		-v|--vhost) vhost
+		-v|--vhost)
+			_Vhost
 			shift;;
-		-h|--help) usage
+		-h|--help)
+			_Help
 			shift;;
 		--) # fin des options
 			shift
 			break;;
-		*) error
+		*)
+			_Error
 			shift;;
 	esac
 done
