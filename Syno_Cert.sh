@@ -67,7 +67,7 @@ _Ask(){
 		if [[ $4 != 1 ]]; then
 			Result=${Result,,}
 		fi
-		if [[ -n "${Reponses[$Result]}" ]]; then
+		if [[ -n "${Reponses[$Result]}" ]] || [[ -n "${Reponses[".*"]}" ]]; then
 			eval "$1='$Result'"
 			if [[ $5 = 1 ]]; then
 				echo ""
@@ -87,7 +87,7 @@ _Ask(){
 # Syntaxe .........: _Renew
 # Valeur de retour.: Aucune
 # ===============================================================================================================================
-renew(){
+_Renew(){
 	#Affiche la date et l'heure d'exécution du script
 	echo "========================================="
 	echo "$(date)"
