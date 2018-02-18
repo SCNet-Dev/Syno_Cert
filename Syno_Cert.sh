@@ -32,10 +32,10 @@ _Error(){
 # ===============================================================================================================================
 _Help(){
 	echo "Usage : ./${0##*/} [options]"
-	echo "	-h, --help		: afficher l'aide"
-	echo "	-r, --renew		: renouvelez les certificats"
-	echo "	-g, --get=<domaine>	: rétourne l'emplacement des fichiers du certificat <domaine>"
-	echo "	-v, --vhost		: créer un vhost nginx type avec support ssl et renouvellement certificat"
+	echo "	-h, --help		: affiche l'aide"
+	echo "	-r, --renew		: aenouvelle les certificats"
+	echo "	-g, --get=<domaine>	: retourne l'emplacement des fichiers du certificat <domaine>"
+	echo "	-v, --vhost		: créé un vhost nginx type avec support ssl et renouvellement certificat"
 } #==> _Help
 
 # FONCTION ======================================================================================================================
