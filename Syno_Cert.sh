@@ -41,13 +41,14 @@ _Help(){
 # FONCTION ======================================================================================================================
 # Nom .............: _Ask
 # Description .....: Demande une information à l'utilisateur
-# Syntaxe .........: _Ask $Reponse_Var $Demande $Reponses [$Casse] [$Impultionnel]
+# Syntaxe .........: _Ask $Reponse_Var $Demande $Reponses [$Casse] [$Impultionnel] [$Optionnel]
 # Paramètres ......: $Reponse_Var					- Nom de la variable dans laquelle retourner la réponse.
 #										 $Demande             - Question à afficher.
 #                    $Reponses            - Différentes réponses possibles séparés par ";". Mettre ".*" pour autoriser toutes les réponses.
-#										 $Casse								- [optionel] 1 = Respecter la casse, 0 = Ne pas tenir compte de la casse (par défaut).
-#                    $Impultionnel        - [optionel] 1 = Pas de validation par touche entrée, 0 = Validation par touche entrée (par défaut).
+#										 $Casse								- [optionnel] 1 = Respecter la casse, 0 = Ne pas tenir compte de la casse (par défaut).
+#                    $Impultionnel        - [optionnel] 1 = Pas de validation par touche entrée, 0 = Validation par touche entrée (par défaut).
 #																						Possible uniquement si réponse de 1 caractère.
+#										 $Optionnel						- [optionnel] 1 = Réponse vide autorisée, 0 = Réponse vide interdite (par défaut).
 # Valeur de retour.: Réponse de l'utilisateur
 # Exemple .........: _Ask Resultat "Etes-vous sûr ? [o/n]" "o|n" 0 1
 # ===============================================================================================================================
@@ -126,7 +127,7 @@ _Getpath(){
 
 	for i in *; do
 		if test -d "$i"; then
-			if [ `awk -F'"' 'NR==3 {print $4}' "./$i/renew.json"` = $cert ]; then
+			if [[ `awk -F'"' 'NR==3 {print $4}' "./$i/renew.json"` = $cert ]]; then
 				echo "Les fichiers du certificat $1 sont :"
 				echo "	/usr/syno/etc/certificate/_archive/$i/cert.pem"
 				echo "	/usr/syno/etc/certificate/_archive/$i/chain.pem"
@@ -159,203 +160,100 @@ _Vhost(){
 	echo -e "${CYAN}Création d'un vhost type${BLANC}"
 	echo "------------------------"
 	echo ""
-	read -p "Emplacement de stockage : " -e -i /volume1/etc/vhost Path
-	if [ -z "$Path" ]; then
-		echo ""
-		echo -e "${ROUGE}Erreur - Emplacement obligatoire${BLANC}"
-		echo "--------------------------------"
-		echo -e "${ROUGE}Arret du script${BLANC}"
-		echo ""
-		exit 1
-	fi
+	_Ask 'Path' 'Emplacement de stockage : ' '.*'
 	Path=${Path%/}
 	echo ""
-	read -p "Nom de domaine : " Domain
-	if [ -z "$Domain" ]; then
-		echo ""
-		echo -e "${ROUGE}Erreur - Nom de domaine obligatoire${BLANC}"
-		echo "-----------------------------------"
-		echo -e "${ROUGE}Arret du script${BLANC}"
-		echo ""
-		exit 1
-	fi
+	_Ask 'Domain' 'Nom de domaine : ' '.*'
 	echo ""
-	read -p "Serveur cible : [l]ocal ou [d]istant ? " -e -i l Cible
-	Cible=${Cible,,}
-	if [ $Cible != "l" ] && [ $Cible != "d" ]; then
-		echo ""
-		echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-		echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} l"
-		Cible=l
-	fi
+	_Ask 'Cible' 'Serveur cible : [l]ocal ou [d]istant ? ' 'l;d' 0 1
 	echo ""
-	if [ $Cible = "l" ]; then
-		read -p "Autoriser l'accès en http ? [o/n] " -e -i n HttpAccess
-		HttpAccess=${HttpAccess,,}
-		if [ $HttpAccess != "o" ] && [ $HttpAccess != "n" ]; then
+	if [[ $Cible = "l" ]]; then
+		_Ask 'HttpAccess' "Autoriser l'accès en http ? [o/n] " 'o;n' 0 1
+		if [[ $HttpAccess = "o" ]]; then
 			echo ""
-			echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} n"
-			HttpAccess="n"
-		elif [ $HttpAccess = "o" ]; then
+			_Ask 'PortHttp' 'Port http à utiliser ? ' '.*'
 			echo ""
-			read -p "Port http à utiliser ? " -e -i 80 PortHttp
-			if [ -z $PortHttp ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Numéro de port obligatoire${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 80"
-				PortHttp=80
-			fi
-			echo ""
-			read -p "Activer une redirection automatique vers SSL ? [o/n] " -e -i o RedirSSL
-			RedirSSL=${RedirSSL,,}
-			if [ $RedirSSL != "o" ] && [ $RedirSSL != "n" ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} o"
-				RedirSSL="o"
-			fi
+			_Ask 'RedirSSL' 'Activer une redirection automatique vers SSL ? [o/n] ' 'o;n' 0 1
 		fi
 		echo ""
-		read -p "Port SSL a utiliser : " -e -i 443 PortSSL
-		if [ -z $PortSSL ]; then
-			echo ""
-			echo -e "${ROUGE}Erreur - Numéro de port obligatoire${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 443"
-			PortSSL=443
-		fi
+		_Ask 'PortSSL' 'Port SSL a utiliser : ' '.*'
 		echo ""
-		read -p "Emplacement du dossier web : " -e -i /volume1/web DossierWeb
-		if [ -z "$DossierWeb" ]; then
-			echo ""
-			echo -e "${ROUGE}Erreur - Dossier Web obligatoire${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} /volume1/web"
-			DossierWeb="/volume1/web"
-		fi
+		_Ask 'DossierWeb' 'Emplacement du dossier web : ' '.*'
 		DossierWeb=${DossierWeb%/}
 		echo ""
-		read -p "Activer Php ? [o/n] " -e -i n Php
-		Php=${Php,,}
-		if [ $Php != "o" ] && [ $Php != "n" ]; then
+		_Ask 'Php' 'Activer Php ? [o/n] ' 'o;n' 0 1
+		if [[ $Php = "o" ]]; then
 			echo ""
-			echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} n"
-			Php="n"
-		elif [ "${Php,,}" = "o" ]; then
-			echo ""
-			read -p "Version de php [5/7] ? " -e -i 5 PhpVersion
-			if [ "$PhpVersion" != 5 ] && [ "$PhpVersion" != 7 ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 5"
-				PhpVersion=5
-			fi
+			_Ask 'PhpVersion' 'Version de Php ? [5/7] ' '5;7' 0 1
 		fi
 	else
-		read -p "Autoriser l'accès en http ? [o/n] " -e -i n HttpAccess
-		HttpAccess=${HttpAccess,,}
-		if [ $HttpAccess != "o" ] && [ $HttpAccess != "n" ]; then
+		_Ask 'HttpAccess' "Autoriser l'accès en http ? [o/n] " 'o;n' 0 1
+		if [[ $HttpAccess = "o" ]]; then
 			echo ""
-			echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} n"
-			HttpAccess="n"
-		elif [ $HttpAccess = "o" ]; then
+			_Ask 'PortHttp' 'Port http à utiliser ? ' '.*'
 			echo ""
-			read -p "Port http à utiliser ? " -e -i 80 PortHttp
-			if [ -z $PortHttp ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Numéro de port obligatoire${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 80"
-				PortHttp=80
-			fi
+			_Ask 'RedirSSL' 'Activer une redirection automatique vers SSL ? [o/n] ' 'o;n' 0 1
+		fi
+		if [[ $RedirSSL != "o" ]]; then
+			echo ""
+			_Ask 'SSLAccess' "Autoriser l'accès en SSL ? [o/n] " 'o;n' 0 1
+		fi
+		if [[ $SSLAccess = "o" ]] || [[ $RedirSSL = "o" ]]; then
+			echo ""
+			_Ask 'Certif' "Permettre également la création et le renouvellement d'un certificat par le serveur distant (pour un accès type DSM) ? [o/n] " 'o;n' 0 1
+			echo ""
+			_Ask 'PortSSL' 'Port SSL a utiliser : ' '.*'
 		fi
 		echo ""
-		read -p "Autoriser l'accès en SSL ? [o/n] " -e -i n SSLAccess
-		SSLAccess=${SSLAccess,,}
-		if [ $SSLAccess != "o" ] && [ $SSLAccess != "n" ]; then
+		_Ask 'AdressCible' 'Adresse du serveur distant : ' '.*'
+		if [[ $HttpAccess = "o" ]]; then
 			echo ""
-			echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} n"
-			SSLAccess="n"
-		elif [ $SSLAccess = "o" ]; then
-			echo ""
-			read -p "Port SSL à utiliser ? " -e -i 443 PortSSL
-			if [ -z $PortSSL ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Numéro de port obligatoire${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 443"
-				PortSSL=443
-			fi
-		fi
-		echo ""
-		read -p "Adresse du serveur distant : " AdressCible
-		if [ -z $AdressCible ]; then
-			echo ""
-			echo -e "${ROUGE}Erreur - Adresse obligatoire${BLANC}"
-			echo "----------------------------"
-			echo -e "${ROUGE}Arret du script${BLANC}"
-			echo ""
-			exit 1
-		fi
-		if [ $HttpAccess = "o" ]; then
-			echo ""
-			read -p "Port http du serveur distant : " -e -i 80 PortHttpCible
-			if [ -z $PortHttpCible ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 80"
-				PortHttpCible=80
-			fi
-		fi
-		if [ $SSLAccess = "o" ]; then
-			echo ""
-			read -p "Port SSL du serveur distant : " -e -i 443 PortSSLCible
-			if [ -z $PortSSLCible ]; then
-				echo ""
-				echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
-				echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} 443"
-				PortSSLCible=80
-			fi
+			_Ask 'PortCible' 'Port http du serveur distant : ' '.*'
 		fi
 	fi
 	echo ""
 
-	#On récupère le chemin du certificat (si serveur local)
-	if [ $Cible = "l" ]; then
+	#On récupère le chemin du certificat (si serveur local ou distant avec SSL)
+	if [[ $Cible = "d" ]]; then
+		if [[ $RedirSSL = "o" ]] || [[ $SSLAccess = "o" ]]; then
+			CertLocal="o"
+		fi
+	fi
+	if [[ $Cible = "l" ]] || [[ $CertLocal = "o" ]]; then
 		cd /usr/syno/etc/certificate/_archive
 
 		for i in *; do
 			if test -d "$i"; then
-				if [ `awk -F'"' 'NR==3 {print $4}' "./$i/renew.json"` = $Domain ]; then
+				if [[ `awk -F'"' 'NR==3 {print $4}' "./$i/renew.json"` = $Domain ]]; then
 					DossierCert=$i
 					continue
 				fi
 			fi
 		done
-		if [ -z "$DossierCert" ]; then
+		if [[ -z "$DossierCert" ]]; then
 			echo ""
 			echo -e "${ROUGE}Erreur - Certificat inexistant${BLANC}"
 			echo "------------------------------"
-			echo -e "${ROUGE}Arret du script${BLANC}"
+			echo -e "${ROUGE}Arrêt du script${BLANC}"
 			echo ""
 			exit 1
 		fi
 	fi
 
 	#Verifie si un fichier existe déjà et si oui demande si on écrase
-	if [ -f "$Path/$Domain" ]; then
+	if [[ -f "$Path/$Domain" ]]; then
 		echo ""
 		echo -e "${CYAN}Un VHost existe déjà pour ce domaine${BLANC}"
 		echo "------------------------------------"
 		read -p "Ecraser le VHost existant ? [o/n] " -e -i n Ecrase
 		echo ""
 		Ecrase=${Ecrase,,}
-		if [ $Ecrase != "o" ] && [ $Ecrase != "n" ]; then
+		if [[ $Ecrase != "o" ]] && [[ $Ecrase != "n" ]]; then
 			echo -e "${ROUGE}Erreur - Réponse incorrecte${BLANC}"
 			echo -e "${ROUGE}Utilisation de la valeur par défaut :${BLANC} n"
 			echo ""
 			exit 1
-		elif [ $Ecrase = "n" ]; then
+		elif [[ $Ecrase = "n" ]]; then
 			echo "Création du VHost annulée."
 			echo ""
 			exit 0
@@ -363,7 +261,7 @@ _Vhost(){
 	fi
 
 	#Créer le répertoire sible si il existe pas
-	if [ ! -d "$Path" ]; then
+	if [[ ! -d "$Path" ]]; then
 		mkdir -p $Path
 	fi
 
@@ -375,13 +273,13 @@ _Vhost(){
 	echo "" >> "$Path/$Domain"
 	echo "	server_name $Domain;" >> "$Path/$Domain"
 	echo "" >> "$Path/$Domain"
-	if [ $Cible = "l" ]; then
-		if [ $HttpAccess = "o" ] && [ $PortHttp = 80 ]; then
-			if [ $RedirSSL = "o" ]; then
+	if [[ $Cible = "l" ]]; then
+		if [[ $HttpAccess = "o" ]] && [[ $PortHttp = 80 ]]; then
+			if [[ $RedirSSL = "o" ]]; then
 				echo "	return 302 https://$Domain:$PortSSL\$request_uri;" >> "$Path/$Domain"
 			else
 				echo "	root $DossierWeb;" >> "$Path/$Domain"
-				if [ $Php = "o" ]; then
+				if [[ $Php = "o" ]]; then
 					echo "	index index.php index.php5 index.html index.htm;" >> "$Path/$Domain"
 				else
 					echo "	index index.html index.htm;" >> "$Path/$Domain"
@@ -403,7 +301,7 @@ _Vhost(){
 		echo "		root /var/lib/letsencrypt;" >> "$Path/$Domain"
 		echo "		default_type text/plain;" >> "$Path/$Domain"
 		echo "	}" >> "$Path/$Domain"
-		if [ $Php = "o" ] && [ $HttpAccess = "o" ] && [ $PortHttp = 80 ]; then
+		if [[ $Php = "o" ]] && [[ $HttpAccess = "o" ]] && [[ $PortHttp = 80 ]]; then
 			echo "" >> "$Path/$Domain"
 			echo "	####################################" >> "$Path/$Domain"
 			echo "	########## GESTION DU PHP ##########" >> "$Path/$Domain"
@@ -411,7 +309,7 @@ _Vhost(){
 			echo "" >> "$Path/$Domain"
 			echo "	location ~* \.php$ {" >> "$Path/$Domain"
 			echo "		try_files \$uri =404;" >> "$Path/$Domain"
-			if [ $PhpVersion = 5 ]; then
+			if [[ $PhpVersion = 5 ]]; then
 				echo "		fastcgi_pass unix:/run/php-fpm/php56-fpm.sock;" >> "$Path/$Domain"
 			else
 				echo "		fastcgi_pass unix:/run/php-fpm/php70-fpm.sock;" >> "$Path/$Domain"
@@ -423,31 +321,37 @@ _Vhost(){
 			echo "	####################################" >> "$Path/$Domain"
 		fi
 	else
-		if [ $HttpAccess = "o" ] && [ $PortHttp = 80 ]; then
-			echo "	location / {" >> "$Path/$Domain"
-			echo "		proxy_set_header   X-Real-IP \$remote_addr;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Host      \$host;" >> "$Path/$Domain"
-			echo "		proxy_http_version 1.1;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
-			echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_pass         http://$AdressCible:$PortHttpCible;" >> "$Path/$Domain"
-			echo "	}" >> "$Path/$Domain"
-			echo "" >> "$Path/$Domain"
-			echo "	location ^~ /.well-known/acme-challenge {" >> "$Path/$Domain"
-			echo "		proxy_set_header   X-Real-IP \$remote_addr;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Host      \$host;" >> "$Path/$Domain"
-			echo "		proxy_http_version 1.1;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
-			echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_pass         http://$AdressCible:80;" >> "$Path/$Domain"
-			echo "	}" >> "$Path/$Domain"
+		if [[ $HttpAccess = "o" ]] && [[ $PortHttp = 80 ]]; then
+			if [[ $RedirSSL = "o" ]]; then
+				echo "	return 302 https://$Domain:$PortSSL\$request_uri;" >> "$Path/$Domain"
+			else
+				echo "	location / {" >> "$Path/$Domain"
+				echo "		proxy_set_header   X-Real-IP \$remote_addr;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Host      \$host;" >> "$Path/$Domain"
+				echo "		proxy_http_version 1.1;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
+				echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
+				echo "		proxy_pass         http://$AdressCible:$PortCible;" >> "$Path/$Domain"
+				echo "	}" >> "$Path/$Domain"
+			fi
+			if [[ $Certif = "o" ]]; then
+				echo "" >> "$Path/$Domain"
+				echo "	location ^~ /.well-known/acme-challenge {" >> "$Path/$Domain"
+				echo "		proxy_set_header   X-Real-IP \$remote_addr;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Host      \$host;" >> "$Path/$Domain"
+				echo "		proxy_http_version 1.1;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
+				echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
+				echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
+				echo "		proxy_pass         http://$AdressCible:80;" >> "$Path/$Domain"
+				echo "	}" >> "$Path/$Domain"
+			fi
 		else
 			echo "	location / {" >> "$Path/$Domain"
 			echo "		deny all;" >> "$Path/$Domain"
 			echo "		return 444;" >> "$Path/$Domain"
-			echo "  }" >> "$Path/$Domain"
+			echo "	}" >> "$Path/$Domain"
 			echo "" >> "$Path/$Domain"
 			echo "	location ^~ /.well-known/acme-challenge {" >> "$Path/$Domain"
 			echo "		proxy_set_header   X-Real-IP \$remote_addr;" >> "$Path/$Domain"
@@ -463,19 +367,19 @@ _Vhost(){
 	echo "}" >> "$Path/$Domain"
 	echo "" >> "$Path/$Domain"
 	#Serveur Http Autre Port
-	if [ $HttpAccess = "o" ] && [ $PortHttp != 80 ]; then
+	if [[ $HttpAccess = "o" ]] && [[ $PortHttp != 80 ]]; then
 		echo "server {" >> "$Path/$Domain"
 		echo "	listen $PortHttp;" >> "$Path/$Domain"
 		echo "	listen [::]:$PortHttp;" >> "$Path/$Domain"
 		echo "" >> "$Path/$Domain"
 		echo "	server_name $Domain;" >> "$Path/$Domain"
 		echo "" >> "$Path/$Domain"
-		if [ $Cible = "l" ]; then
-			if [ $RedirSSL = "o" ]; then
+		if [[ $Cible = "l" ]]; then
+			if [[ $RedirSSL = "o" ]]; then
 				echo "	return 302 https://$Domain:$PortSSL\$request_uri;" >> "$Path/$Domain"
 			else
 				echo "	root $DossierWeb;" >> "$Path/$Domain"
-				if [ $Php = "o" ]; then
+				if [[ $Php = "o" ]]; then
 					echo "	index index.php index.php5 index.html index.htm;" >> "$Path/$Domain"
 				else
 					echo "	index index.html index.htm;" >> "$Path/$Domain"
@@ -486,14 +390,14 @@ _Vhost(){
 				echo "		try_files \$uri \$uri/ =404;" >> "$Path/$Domain"
 				echo "	}" >> "$Path/$Domain"
 				echo "" >> "$Path/$Domain"
-				if [ $Php = "o" ]; then
+				if [[ $Php = "o" ]]; then
 					echo "	####################################" >> "$Path/$Domain"
 					echo "	########## GESTION DU PHP ##########" >> "$Path/$Domain"
 					echo "	####################################" >> "$Path/$Domain"
 					echo "" >> "$Path/$Domain"
 					echo "	location ~* \.php$ {" >> "$Path/$Domain"
 					echo "		try_files \$uri =404;" >> "$Path/$Domain"
-					if [ $PhpVersion = 5 ]; then
+					if [[ $PhpVersion = 5 ]]; then
 						echo "		fastcgi_pass unix:/run/php-fpm/php56-fpm.sock;" >> "$Path/$Domain"
 					else
 						echo "		fastcgi_pass unix:/run/php-fpm/php70-fpm.sock;" >> "$Path/$Domain"
@@ -513,14 +417,14 @@ _Vhost(){
 			echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
 			echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
 			echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_pass         http://$AdressCible:$PortHttpCible;" >> "$Path/$Domain"
+			echo "		proxy_pass         http://$AdressCible:$PortCible;" >> "$Path/$Domain"
 			echo "	}" >> "$Path/$Domain"
 		fi
 		echo "}" >> "$Path/$Domain"
 		echo "" >> "$Path/$Domain"
 	fi
 	#Serveur Https
-	if [ $Cible = "l" ]; then
+	if [[ $Cible = "l" ]]; then
 		echo "server {" >> "$Path/$Domain"
 		echo "	listen $PortSSL ssl http2;" >> "$Path/$Domain"
 		echo "	listen [::]:$PortSSL ssl http2;" >> "$Path/$Domain"
@@ -528,7 +432,7 @@ _Vhost(){
 		echo "	server_name $Domain;" >> "$Path/$Domain"
 		echo "" >> "$Path/$Domain"
 		echo "	root $DossierWeb;" >> "$Path/$Domain"
-		if [ $Php = "o" ]; then
+		if [[ $Php = "o" ]]; then
 			echo "	index index.php index.php5 index.html index.htm;" >> "$Path/$Domain"
 		else
 			echo "	index index.html index.htm;" >> "$Path/$Domain"
@@ -548,7 +452,7 @@ _Vhost(){
 		echo "	ssl_certificate_key /usr/syno/etc/certificate/_archive/$DossierCert/privkey.pem;" >> "$Path/$Domain"
 		echo "" >> "$Path/$Domain"
 		echo "	####################################" >> "$Path/$Domain"
-		if [ $Php = "o" ]; then
+		if [[ $Php = "o" ]]; then
 			echo "" >> "$Path/$Domain"
 			echo "	####################################" >> "$Path/$Domain"
 			echo "	########## GESTION DU PHP ##########" >> "$Path/$Domain"
@@ -556,7 +460,7 @@ _Vhost(){
 			echo "" >> "$Path/$Domain"
 			echo "	location ~* \.php$ {" >> "$Path/$Domain"
 			echo "		try_files \$uri =404;" >> "$Path/$Domain"
-			if [ $PhpVersion = 5 ]; then
+			if [[ $PhpVersion = 5 ]]; then
 				echo "		fastcgi_pass unix:/run/php-fpm/php56-fpm.sock;" >> "$Path/$Domain"
 			else
 				echo "		fastcgi_pass unix:/run/php-fpm/php70-fpm.sock;" >> "$Path/$Domain"
@@ -569,7 +473,7 @@ _Vhost(){
 		fi
 		echo "}" >> "$Path/$Domain"
 	else
-		if [ $SSLAccess = "o" ]; then
+		if [[ $SSLAccess = "o" ]] || [[ $RedirSSL = "o" ]]; then
 			echo "server {" >> "$Path/$Domain"
 			echo "	listen $PortSSL ssl http2;" >> "$Path/$Domain"
 			echo "	listen [::]:$PortSSL ssl http2;" >> "$Path/$Domain"
@@ -583,7 +487,7 @@ _Vhost(){
 			echo "		proxy_set_header   Upgrade \$http_upgrade;" >> "$Path/$Domain"
 			echo "		proxy_set_header   Connection 'upgrade';" >> "$Path/$Domain"
 			echo "		proxy_cache_bypass \$http_upgrade;" >> "$Path/$Domain"
-			echo "		proxy_pass         https://$AdressCible:$PortSSLCible;" >> "$Path/$Domain"
+			echo "		proxy_pass         http://$AdressCible:$PortCible;" >> "$Path/$Domain"
 			echo "	}" >> "$Path/$Domain"
 			echo "}" >> "$Path/$Domain"
 		fi
@@ -596,7 +500,7 @@ _Vhost(){
 	#Creer le lien symbolique
 	cd /etc/nginx/sites-enabled
 
-	ln -s "$Path/$Domain"
+#	ln -s "$Path/$Domain"
 
 	#Lance la vérification de la configuration et avertit l'utilisateur
 	nginx -t
