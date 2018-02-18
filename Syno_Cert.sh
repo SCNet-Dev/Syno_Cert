@@ -68,12 +68,18 @@ _Ask(){
 		if [[ $4 != 1 ]]; then
 			Result=${Result,,}
 		fi
-		if [[ -n "${Reponses[$Result]}" ]] || [[ -n "${Reponses[".*"]}" ]]; then
-			eval "$1='$Result'"
-			if [[ $5 = 1 ]]; then
+		if [[ ! -z $Result ]] || [[ $6 = 1 ]]; then
+			if [[ -n "${Reponses[$Result]}" ]] || [[ -n "${Reponses[".*"]}" ]]; then
+				eval "$1='$Result'"
+				if [[ $5 = 1 ]]; then
+					echo ""
+				fi
+				break
+			else
+				echo ""
+				echo "Réponse incorrecte"
 				echo ""
 			fi
-			break
 		else
 			echo ""
 			echo "Réponse incorrecte"
