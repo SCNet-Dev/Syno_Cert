@@ -41,7 +41,7 @@ _Help(){
 # FONCTION ======================================================================================================================
 # Nom .............: _Ask
 # Description .....: Demande une information à l'utilisateur
-# Syntaxe .........: _Ask $Reponse_Var $Demande $Reponses [$Casse] [$Impultionnel] [$Optionnel]
+# Syntaxe .........: _Ask $Reponse_Var $Demande $Reponses [$Casse] [$Impultionnel] [$Optionnel] [$Defaut]
 # Paramètres ......: $Reponse_Var					- Nom de la variable dans laquelle retourner la réponse.
 #										 $Demande             - Question à afficher.
 #                    $Reponses            - Différentes réponses possibles séparés par ";". Mettre ".*" pour autoriser toutes les réponses.
@@ -49,6 +49,7 @@ _Help(){
 #                    $Impultionnel        - [optionnel] 1 = Pas de validation par touche entrée, 0 = Validation par touche entrée (par défaut).
 #																						Possible uniquement si réponse de 1 caractère.
 #										 $Optionnel						- [optionnel] 1 = Réponse vide autorisée, 0 = Réponse vide interdite (par défaut).
+#										 $Defaut							- [optionnel] Réponse proposée par défaut (uniquement si pas Impultionnel)
 # Valeur de retour.: Réponse de l'utilisateur
 # Exemple .........: _Ask Resultat "Etes-vous sûr ? [o/n]" "o|n" 0 1
 # ===============================================================================================================================
@@ -61,7 +62,11 @@ _Ask(){
 	#Demande l'information et traite les réponses
 	while [[ true ]]; do
 		if [[ $5 != 1 ]]; then
-			read -p "$2" Result
+			if [[ ! -z $7 ]]; then
+				read -p "$2" -e -i "$7" Result
+			else
+				read -p "$2" Result
+			fi
 		else
 			read -p "$2" -n 1 Result
 		fi
@@ -166,7 +171,7 @@ _Vhost(){
 	echo -e "${CYAN}Création d'un vhost type${BLANC}"
 	echo "------------------------"
 	echo ""
-	_Ask 'Path' 'Emplacement de stockage : ' '.*'
+	_Ask 'Path' 'Emplacement de stockage : ' '.*' 0 0 0 '/volume1/'
 	Path=${Path%/}
 	echo ""
 	_Ask 'Domain' 'Nom de domaine : ' '.*'
@@ -184,7 +189,7 @@ _Vhost(){
 		echo ""
 		_Ask 'PortSSL' 'Port SSL a utiliser : ' '.*'
 		echo ""
-		_Ask 'DossierWeb' 'Emplacement du dossier web : ' '.*'
+		_Ask 'DossierWeb' 'Emplacement du dossier web : ' '.*' 0 0 0 '/volume1/web'
 		DossierWeb=${DossierWeb%/}
 		echo ""
 		_Ask 'Php' 'Activer Php ? [o/n] ' 'o;n' 0 1
