@@ -20,7 +20,7 @@ BLANC='\033[0m'
 # ===============================================================================================================================
 _Error(){
 	echo "ERREUR : paramètres invalides !" >&2
-	echo "Utilisez l'option -help pour en savoir plus" >&2
+	echo "Utilisez l'option --help pour en savoir plus" >&2
 	exit 1
 }	#==> _Error
 
