@@ -9,24 +9,31 @@ Ce script permet les fonctionnalités suivantes :
 
 ### Pré-requis
 
-Le script nécessite un accès root pour fonctionner.
-Les certificats doivent avoir été créés via l'interface du DSM.
-Les certificats doivent avoir été émis par Lets Encrypt.
+Le script nécessite un accès root pour fonctionner.</br>
+Les certificats doivent avoir été créés via l'interface du DSM et avoir été émis par Lets Encrypt.
 
 ### Utilisation
 
-Usage : .syno_cert.sh [options]
-	-h, --help		: afficher l'aide
-	-r, --renew		: renouvelez les certificats
-	-g, --get=<domaine>	: retourne l'emplacement des fichiers du certificat <domaine>
-	-v, --vhost		: créer un vhost nginx type avec support ssl et renouvellement certificat
-  
-  ### Licence
+```shell
+# Afficher l'aide
+$ ./syno_cert.sh --help
+
+# Renouveler les certificats
+$ ./syno_cert.sh --renew
+
+# Retourner l'emplacement des fichiers du certificat <domaine>
+$ ./syno_cert.sh --get=<domaine>
+
+# Créer un vhost nginx avec support éventuel de http, ssl, php et renouvellement certificat
+$ ./syno_cert.sh --vhost
+```
+
+### Licence
   
 ```
 The MIT License (MIT)
 
-Copyright (c) 2016 Dmitriy Krivoruchko
+Copyright (c) 2018 SCNet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
