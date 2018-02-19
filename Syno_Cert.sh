@@ -511,7 +511,7 @@ _Vhost(){
 	#Creer le lien symbolique
 	cd /etc/nginx/sites-enabled
 
-#	ln -s "$Path/$Domain"
+	ln -s "$Path/$Domain"
 
 	#Lance la vérification de la configuration et avertit l'utilisateur
 	nginx -t
