@@ -33,7 +33,7 @@ _Error(){
 _Help(){
 	echo "Usage : ./${0##*/} [options]"
 	echo "	-h, --help		: affiche l'aide"
-	echo "	-r, --renew		: aenouvelle les certificats"
+	echo "	-r, --renew		: renouvelle les certificats"
 	echo "	-g, --get=<domaine>	: retourne l'emplacement des fichiers du certificat <domaine>"
 	echo "	-v, --vhost		: créé un vhost nginx type avec support ssl et renouvellement certificat"
 } #==> _Help
@@ -119,6 +119,9 @@ _Renew(){
 	#Renouvelle tous les certifs.
 	/usr/syno/sbin/syno-letsencrypt renew-all -v
 
+	#Relance le service Web
+	synoservicecfg --restart pkgctl-WebStation
+
 	exit 0
 }	#==> _Renew
 
@@ -157,7 +160,7 @@ _Getpath(){
 
 	echo "Aucun certificat pour le domaine $1"
 	exit 1
-}	#==> _Renew
+}	#==> _Getpath
 
 # FONCTION ======================================================================================================================
 # Nom .............: _Vhost
