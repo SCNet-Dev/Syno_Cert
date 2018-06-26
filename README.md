@@ -11,7 +11,7 @@ Ce script permet les fonctionnalités suivantes :
 
 Le script nécessite un accès root pour fonctionner.</br>
 Les certificats doivent avoir été créés via l'interface du DSM et avoir été émis par Lets Encrypt.</br>
-Le support de l'ipv6 doit ^$etre désactivé dans l'interface réseau à cause d'un bug de Synology.
+Le support de l'ipv6 doit être désactivé dans l'interface réseau à cause d'un bug de Synology.
 
 ### Utilisation
 
