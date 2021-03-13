@@ -23,7 +23,7 @@ $ ./syno_cert.sh --help
 $ ./syno_cert.sh --renew
 
 # Retourner l'emplacement des fichiers du certificat <domaine>
-$ ./syno_cert.sh --get=<domaine>
+$ ./syno_cert.sh --get <domaine>
 
 # Créer un vhost nginx avec support éventuel de http, ssl, php et renouvellement certificat
 $ ./syno_cert.sh --vhost
