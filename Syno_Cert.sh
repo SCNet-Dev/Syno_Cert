@@ -34,7 +34,7 @@ _Help(){
 	echo "Usage : ./${0##*/} [options]"
 	echo "	-h, --help		: affiche l'aide"
 	echo "	-r, --renew		: renouvelle les certificats"
-	echo "	-g, --get=<domaine>	: retourne l'emplacement des fichiers du certificat <domaine>"
+	echo "	-g, --get <domaine>	: retourne l'emplacement des fichiers du certificat <domaine>"
 	echo "	-v, --vhost		: créé un vhost nginx type avec support ssl et renouvellement certificat"
 } #==> _Help
 
